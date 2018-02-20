@@ -1,10 +1,15 @@
-var code = "Paper 100 Pen 100 Line 10 10 10 10"
+var code = "Paper 200 Pen 0 Line 10 50 50 10 Line 30 60 60 20"
+
+var compiler = {}
+compiler.version = '1.0.0';
+compiler.compile = genaretor(transformer(parser(lexer(code))));
+
+document.getElementById('root').innerHTML = compiler.compile;
 
 function lexer(input){
     return input.split(" ")
         .filter(t => t.length)
         .map(t => (isNaN(t) ? {type: 'word', value: t} : {type: 'number', value: t}))
-       
 }
 
 function parser(token){
@@ -115,7 +120,7 @@ function transformer(ast){
                     attr: {
                         x1: node.arguments[0].value,
                         y1: node.arguments[1].value,
-                        x1: node.arguments[2].value,
+                        x2: node.arguments[2].value,
                         y2: node.arguments[3].value,
                         stroke: 'rgb('+ pen_color  +'%, '+ pen_color  +'%, '+ pen_color  +'%)'
                     }
@@ -128,4 +133,19 @@ function transformer(ast){
     return svg_ast;
 }
 
-console.log(JSON.stringify(transformer(parser(lexer(code)))));
+function genaretor(svg_ast){
+    
+    var svg_attr = createAttrToString(svg_ast.attr);
+
+    var element = svg_ast.body.map(function(data){
+        return '<' + data.tag + ' ' + createAttrToString(data.attr) + '></' + data.tag + '>'
+    }).join('');
+
+    function createAttrToString(attr){
+        return Object.keys(attr).map(function(data){
+            return data + '="' + attr[data] + '"'
+        }).join(' ')
+    }
+
+    return '<svg ' + svg_attr + '>' + element + '</svg>';
+}
